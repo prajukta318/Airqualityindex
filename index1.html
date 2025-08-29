@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- bootstrap css -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    
+    
+    <!-- fontawsome css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- own css -->
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <title>Document</title>
+</head>
+<body>
+
+    <div class="form">
+        <div class="search mb-15">
+        <input type="text" placeholder="Search by Location">
+        <button><span class="material-symbols-outlined">travel_explore</span></button>
+    </div>
+<!-- Flex container: Live AQI on left, Air Quality stack on right -->
+<div class="d-flex justify-content-between align-items-start text-black fw-bold" style="margin-top: 20px;">
+  <!-- Left: Live AQI -->
+  <div class="d-flex align-items-center">
+    <span class="pulse-dot me-1"></span> Live AQI
+  </div>
+
+  <!-- Right: Air Quality (top) + Moderate (below) -->
+  <div class="text-end" style="margin-right: 10px; margin-top: 1px;">
+    <div>Air Quality</div>
+   <div id="statusLabel" style="margin-left: 20px; font-weight: bold; font-size: 18px; color: #f2b500;">Moderate</div>
+  </div>
+</div>
+
+<!-- AQI value below the row -->
+<div id="aqiValue" style="font-size: 38px; color: #f2b500; text-align: start; margin-top: -40px; margin-left: 20px;">68</div>
+
+
+
+        <div class="climate">
+            <div class="aqi-card mt-4">
+<!-- both PMS -->
+  <div class="aqi-pm" style="margin-top: -30px; margin-bottom: 30px; margin-right: 5px;">
+  <span><strong>PM10 :</strong> <span id="pm10Value">39</span> µg/m³</span>
+  <span style="margin-left: 40px; margin-right: 5px;"><strong>PM2.5 :</strong> <span id="pm25Value">10</span> µg/m³</span>
+</div>
+
+
+  <div class="aqi-scale">
+    <div class="scale-labels">
+      <span>Good</span>
+      <span>Moderate</span>
+      <span>Poor</span>
+      <span style="margin-right: -8px;">Unhealthy</span>
+      <span>Severe</span>
+      <span>Hazardous</span>
+    </div>
+    <div class="scale-bar position-relative" style="position: absolute; width: 400px; margin-left: -15px;">
+  <div class="aqi-gradient-bar"></div>
+  <div class="aqi-pointer-circle" id="aqiPointer" style="left: 68px;"></div>
+</div>
+    <div class="scale-numbers">
+      <span>0</span><span>50</span><span>100</span><span>150</span><span>200</span><span>300</span><span>301+</span>
+    </div>
+  </div>
+</div>
+
+            <div class="extra">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+   <!-- 🔽 YOUR UPDATED AQI SCRIPT -->
+<script>
+  const apiKey = "0s8RVs/Didqjrfmhn9W43w==bMPFx1H2rHheBNyI";
+
+  const searchBox = document.querySelector(".search input");
+  const searchBtn = document.querySelector(".search button");
+  const aqiValue = document.getElementById("aqiValue");
+  const aqiPointer = document.getElementById("aqiPointer");
+  const statusLabel = document.getElementById("statusLabel");
+  const pm10Value = document.getElementById("pm10Value");
+  const pm25Value = document.getElementById("pm25Value");
+
+  function fetchAQIData(city) {
+    fetch(`https://api.api-ninjas.com/v1/airquality?city=${city}`, {
+      headers: { 'X-Api-Key': apiKey }
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (!data || !data.overall_aqi) {
+          alert("Invalid data or city not found.");
+          return;
+        }
+
+        const aqi = data.overall_aqi;
+        updateAQI(aqi);
+
+        // ✅ Accessing correct PM values
+        pm10Value.innerText = data["PM10"]?.concentration ?? "--";
+        pm25Value.innerText = data["PM2.5"]?.concentration ?? "--";
+      })
+      .catch(error => {
+        console.error("Error fetching AQI:", error);
+        alert("Failed to fetch AQI data.");
+      });
+  }
+
+  function updateAQI(aqi) {
+    const barWidth = 400;
+    const pointerLeft = Math.min((aqi / 300) * barWidth, barWidth);
+
+    aqiValue.innerText = aqi;
+    aqiPointer.style.left = `${pointerLeft}px`;
+
+    if (aqi <= 50) {
+      statusLabel.innerText = "Good";
+      statusLabel.style.color = "#2ecc71";
+      aqiValue.style.color = "#2ecc71";
+    } else if (aqi <= 100) {
+      statusLabel.innerText = "Moderate";
+      statusLabel.style.color = "#f2b500";
+      aqiValue.style.color = "#f2b500";
+    } else if (aqi <= 150) {
+      statusLabel.innerText = "Poor";
+      statusLabel.style.color = "#f39c12";
+      aqiValue.style.color = "#f39c12";
+    } else if (aqi <= 200) {
+      statusLabel.innerText = "Unhealthy";
+      statusLabel.style.color = "#e74c3c";
+      aqiValue.style.color = "#e74c3c";
+    } else if (aqi <= 300) {
+      statusLabel.innerText = "Severe";
+      statusLabel.style.color = "#da2e28";
+      aqiValue.style.color = "#da2e28";
+    } else {
+      statusLabel.innerText = "Hazardous";
+      statusLabel.style.color = "#7e0023";
+      aqiValue.style.color = "#7e0023";
+    }
+  }
+
+  searchBtn.addEventListener("click", () => {
+    const city = searchBox.value.trim();
+    if (!city) {
+      alert("Please enter a city name.");
+      return;
+    }
+    fetchAQIData(city);
+  });
+</script>
+
+
+
+
+
+
+
+
+
+
+
+<!-- bootstrap js -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous">
+
+    </script>
+</body>
+</html>
